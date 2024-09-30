@@ -18,13 +18,15 @@ type Proxy struct {
 	connectionsMu sync.RWMutex
 }
 
-func New(listenAddress, targetAddress string) (*Proxy, error) {
+func New(log logrus.FieldLogger, listenAddress, targetAddress string) (*Proxy, error) {
 	listen, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Proxy{
+		log:           log,
+		connections:   map[net.Addr]*Connection{},
 		listen:        listen,
 		targetAddress: targetAddress,
 	}, nil
@@ -74,6 +76,8 @@ func (p *Proxy) handleNewConn(conn net.Conn) error {
 	p.connectionsMu.Unlock()
 
 	defer func() {
+		p.log.Infof("connection from %s to %s closed", conn.RemoteAddr(), target.RemoteAddr())
+
 		p.connectionsMu.Lock()
 		delete(p.connections, conn.RemoteAddr())
 		p.connectionsMu.Unlock()
