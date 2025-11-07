@@ -10,8 +10,8 @@ const (
 
 func startForwardPacket(c *Connection) error {
 	go func() {
+		data := make([]byte, bufferSize)
 		for c.running.Load() {
-			data := make([]byte, bufferSize)
 			n, err := c.conn.Read(data)
 			if err != nil {
 				c.log.Errorf("an error occurred while reading data from client: %v", err)
@@ -28,8 +28,8 @@ func startForwardPacket(c *Connection) error {
 		}
 	}()
 
+	data := make([]byte, bufferSize)
 	for c.running.Load() {
-		data := make([]byte, bufferSize)
 		n, err := c.serverConn.Read(data)
 		if err != nil {
 			return fmt.Errorf("an error occurred while reading data from server: %v", err)
